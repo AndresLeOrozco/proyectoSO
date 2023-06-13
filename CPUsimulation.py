@@ -1,22 +1,26 @@
 import time
+from threading import *
 from datetime import datetime
 from Process import *
 from tkinter import messagebox, filedialog
 # Clase de la simulación
 class CPUSimulation:
-    def __init__(self):
+    def __init__(self,quant):
         self.new_queue = []  # Cola de procesos nuevos
         self.ready_queue = []  # Cola de procesos preparados
         self.waiting_queue = []  # Cola de procesos en espera
         self.log = []  # Registro de cambios de contexto
-        self.quantum = 100  # Quantum de tiempo de la CPU en ms
+        self.quantum = quant  # Quantum de tiempo de la CPU en ms
         self.context_switch_time = int(self.quantum * 0.1)  # Tiempo de cambio de contexto en ms
         self.io_interrupt_time = 5000  # Tiempo de interrupción de E/S en ms
 
     def add_process(self, pid, state, arrival_time, burst_time, priority, size):
         process = Process(pid, state, arrival_time, burst_time, priority, size)
-        self.processes.append(process)
         self.new_queue.append(process)
+
+    def prepare_process(self,process):
+        if len(self.ready_queue) <= 10:
+            self.ready_queue.append(process)
 
     def schedule_processes(self, algorithm):
         if algorithm == "Round Robin":
