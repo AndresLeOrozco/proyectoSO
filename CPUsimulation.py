@@ -108,7 +108,7 @@ class CPUSimulation:
             switch_time = self.context_switch_time / 1000
             time.sleep(switch_time)
             self.log.append(
-                f"{datetime.now()}: Cambio de contexto - Proceso saliente: {self.ready_queue[0].pid}, Proceso entrante: {self.ready_queue[1].pid}")
+                f"{datetime.now()}: Cambio de contexto - Proceso saliente: {self.ready_queue[0].id}, Proceso entrante: {self.ready_queue[1].id}")
 
 
     def calculate_waiting_time(self):
