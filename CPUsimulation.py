@@ -16,6 +16,8 @@ class CPUSimulation:
         self.context_switch_time = int(self.quantum * 0.1)  # Tiempo de cambio de contexto en ms
         self.io_interrupt_time = 5000  # Tiempo de interrupción de E/S en ms
 
+
+    # Este metodo es para crear cada uno de los procesos.
     def generate_process(self,cant):
         random.seed()
         id = 0
@@ -24,12 +26,28 @@ class CPUSimulation:
             self.new_queue.append(process)
             id += 1  
 
+    # Aqui se van a sacar los procesos del new_queue para ingresarlo al ready_queue
     def prepare_process(self,tiempo_llegada):
         if len(self.ready_queue) <= 10:
             process = self.new_queue.pop(0)
             process.state = "Preparado"
             process.arrival_time = tiempo_llegada
             self.ready_queue.append(process)
+
+    # Este es el metodo que interrumpe el proceso
+    def inturruption_process(self):
+        if self.ready_queue:
+            # Primero registrar el cambio de contexto en el log
+            self.context_switch()
+            # Se registra el proceso y se saca del queue y cambiandole el estado
+            process = self.ready_queue.pop(0)
+            process.state = "En espera"
+            self.waiting_queue.append(process)
+            #Se define el tiempo que deberia esperar el proceso
+            time.sleep(self.io_interrupt_time / 1000)
+            process.state = "Preparado"
+            self.ready_queue.append(process)
+
 
     def schedule_processes(self, algorithm):
         if algorithm == "Round Robin":
@@ -92,14 +110,6 @@ class CPUSimulation:
             self.log.append(
                 f"{datetime.now()}: Cambio de contexto - Proceso saliente: {self.ready_queue[0].pid}, Proceso entrante: {self.ready_queue[1].pid}")
 
-    def io_interrupt(self):
-        if self.ready_queue:
-            process = self.ready_queue.pop(0)
-            process.state = "En espera"
-            self.waiting_queue.append(process)
-            time.sleep(self.io_interrupt_time / 1000)
-            process.state = "Preparado"
-            self.ready_queue.append(process)
 
     def calculate_waiting_time(self):
         for process in self.finished_processes:
