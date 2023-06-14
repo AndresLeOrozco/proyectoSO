@@ -17,7 +17,7 @@ class CPUSimulation:
         self.io_interrupt_time = 5000  # Tiempo de interrupción de E/S en ms
 
 
-    # Este metodo es para crear cada uno de los procesos.
+    # Este metodo es para crear cada uno de los procesos..
     def generate_process(self,cant):
         random.seed()
         id = 0
@@ -121,4 +121,3 @@ class CPUSimulation:
         total_waiting_time = sum(process.waiting_time for process in self.finished_processes)
         return total_waiting_time / len(self.finished_processes)
     
-    //Edu
