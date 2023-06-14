@@ -3,23 +3,32 @@ from threading import *
 from datetime import datetime
 from Process import *
 from tkinter import messagebox, filedialog
+from random import *
 # Clase de la simulación
 class CPUSimulation:
     def __init__(self,quant):
         self.new_queue = []  # Cola de procesos nuevos
         self.ready_queue = []  # Cola de procesos preparados
         self.waiting_queue = []  # Cola de procesos en espera
+        self.end_process = []
         self.log = []  # Registro de cambios de contexto
         self.quantum = quant  # Quantum de tiempo de la CPU en ms
         self.context_switch_time = int(self.quantum * 0.1)  # Tiempo de cambio de contexto en ms
         self.io_interrupt_time = 5000  # Tiempo de interrupción de E/S en ms
 
-    def add_process(self, pid, state, arrival_time, burst_time, priority, size):
-        process = Process(pid, state, arrival_time, burst_time, priority, size)
-        self.new_queue.append(process)
+    def generate_process(self,cant):
+        random.seed()
+        id = 0
+        for i in range (cant):
+            process = Process(id,"Nuevo",0,random.uniform(1,10),random.uniform(1,5),random.uniform(1,100))
+            self.new_queue.append(process)
+            id += 1  
 
-    def prepare_process(self,process):
+    def prepare_process(self,tiempo_llegada):
         if len(self.ready_queue) <= 10:
+            process = self.new_queue.pop(0)
+            process.state = "Preparado"
+            process.arrival_time = tiempo_llegada
             self.ready_queue.append(process)
 
     def schedule_processes(self, algorithm):
@@ -29,7 +38,6 @@ class CPUSimulation:
             self.priority_round_robin()
         else:
             messagebox.showerror("Error", "Algoritmo desconocido")
-
     def round_robin(self):
         while self.new_queue or self.ready_queue:
             if self.new_queue:
@@ -96,7 +104,6 @@ class CPUSimulation:
     def calculate_waiting_time(self):
         for process in self.finished_processes:
             process.waiting_time = process.arrival_time
-
             for i in range(self.finished_processes.index(process)):
                 process.waiting_time += self.finished_processes[i].burst_time
 

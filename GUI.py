@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
 from CPUsimulation import *
+
 class GUI:
     def __init__(self, root):
         self.root = root
@@ -24,20 +25,7 @@ class GUI:
         self.btn_interrupt.pack()
         self.btn_finish_simulation.pack()
 
-    def load_processes(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Archivos de texto", "*.txt")])
-        if file_path:
-            with open(file_path, "r") as file:
-                for line in file:
-                    process_info = line.strip().split(",")
-                    pid = process_info[0]
-                    state = "Nuevo"
-                    arrival_time = int(process_info[1])
-                    burst_time = int(process_info[2])
-                    priority = int(process_info[3])
-                    size = int(process_info[4])
-                    self.simulation.add_process(pid, state, arrival_time, burst_time, priority, size)
-            messagebox.showinfo("Información", "Procesos cargados exitosamente")
+    
 
     def start_simulation(self):
         algorithm = self.selected_algorithm.get()
@@ -48,17 +36,3 @@ class GUI:
         self.simulation.calculate_waiting_time()
         messagebox.showinfo("Información", "Simulación finalizada")
 
-    def io_interrupt(self):
-        self.simulation.io_interrupt()
-        messagebox.showinfo("Información", "Interrupción de E/S aplicada")
-
-    def finish_simulation(self):
-        average_waiting_time = self.simulation.average_waiting_time()
-        messagebox.showinfo("Información", f"Tiempo de espera promedio: {average_waiting_time}")
-
-        log_file_path = filedialog.asksaveasfilename(filetypes=[("Archivos de texto", "*.txt")])
-        if log_file_path:
-            with open(log_file_path, "w") as file:
-                for log_entry in self.simulation.log:
-                    file.write(log_entry + "\n")
-            messagebox.showinfo("Información", "Bitácora guardada exitosamente")
