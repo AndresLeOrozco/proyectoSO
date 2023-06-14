@@ -120,3 +120,5 @@ class CPUSimulation:
     def average_waiting_time(self):
         total_waiting_time = sum(process.waiting_time for process in self.finished_processes)
         return total_waiting_time / len(self.finished_processes)
+    
+    //Edu
