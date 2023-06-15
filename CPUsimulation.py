@@ -4,7 +4,7 @@ from threading import *
 from datetime import datetime
 from Process import *
 from tkinter import messagebox, filedialog
-from random import *
+import random
 # Clase de la simulación
 class CPUSimulation:
     def __init__(self,quant):
@@ -25,13 +25,13 @@ class CPUSimulation:
         random.seed()
         id = 0
         for i in range (cant):
-            process = Process(id,"Nuevo",0,random.uniform(1,10),random.uniform(1,5),random.uniform(1,100))
+            process = Process(id,"Nuevo",0,round(random.uniform(1,10)),round(random.uniform(1,5)),round(random.uniform(1,100)))
             self.new_queue.append(process)
             id += 1  
 
     # Aqui se van a sacar los procesos del new_queue para ingresarlo al ready_queue
     def prepare_process(self,tiempo_llegada):
-        if len(self.ready_queue) <= 10:
+        if len(self.ready_queue) <= 10 and self.new_queue:
             process = self.new_queue.pop(0)
             process.state = "Preparado"
             process.arrival_time = tiempo_llegada
@@ -61,32 +61,33 @@ class CPUSimulation:
             self.priority_round_robin()
         else:
             messagebox.showerror("Error", "Algoritmo desconocido")
+
     def round_robin(self):
         while self.new_queue or self.ready_queue:
             if len(self.ready_queue) < 10:
                 tiempo_llegada = round(perf_counter() - self.user_time)
                 while self.prepare_process(tiempo_llegada):
                     pass
-
             if self.ready_queue:
                 process = self.ready_queue.pop(0)
                 process.state = "Ejecutando"
                 #Verificar si el tiempo de restante de la rafaga es mayor o menor al quantum menos el 10% de ese quantum
-                if process.remaining_time <= self.quantum -  self.context_switch_time: 
+                if process.remaining_time <= self.quantum - self.context_switch_time: 
                     time.sleep(process.remaining_time)
                     self.context_switch()
-                    self.waiting_time += len(self.ready_queue) * process.remaining_time
+                    self.calculate_waiting_time(process.remaining_time)
                     process.remaining_time = 0
                     process.state = "Terminado"
-                    self.finished_processes.append(process)
+                    self.end_process.append(process)
                 else:
                     time.sleep(self.quantum - self.context_switch_time)
+                    self.calculate_waiting_time(self.quantum)
                     self.context_switch()
-                    process.remaining_time -= self.quantum
+                    process.remaining_time -= (self.quantum - self.context_switch_time)
+                    process.state = "Preparado"
                     self.ready_queue.append(process)
 
     def priority_round_robin(self):
-        
         while  self.ready_queue:
             if self.new_queue:
                 process = self.new_queue.pop(0)
@@ -117,12 +118,10 @@ class CPUSimulation:
                 f"{datetime.now()}: Cambio de contexto - Proceso saliente: {self.ready_queue[0].id}, Proceso entrante: {self.ready_queue[1].id}")
 
 
-    def calculate_waiting_time(self):
-        for process in self.finished_processes:
-            process.waiting_time = process.arrival_time
-            for i in range(self.finished_processes.index(process)):
-                process.waiting_time += self.finished_processes[i].burst_time
-
+    def calculate_waiting_time(self,waiting_time):
+        for process in self.ready_queue:
+            process.waiting_time += waiting_time
+            
     def average_waiting_time(self):
         total_waiting_time = sum(process.waiting_time for process in self.finished_processes)
         return total_waiting_time / len(self.finished_processes)
