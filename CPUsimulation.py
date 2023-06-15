@@ -1,4 +1,5 @@
 import time
+from time import perf_counter, sleep
 from threading import *
 from datetime import datetime
 from Process import *
@@ -15,7 +16,9 @@ class CPUSimulation:
         self.quantum = quant  # Quantum de tiempo de la CPU en ms
         self.context_switch_time = int(self.quantum * 0.1)  # Tiempo de cambio de contexto en ms
         self.io_interrupt_time = 5000  # Tiempo de interrupción de E/S en ms
-
+        self.user_time = perf_counter() #Este es el tiempo que dura el usuario en elegir ingresar aqui
+        
+        
 
     # Este metodo es para crear cada uno de los procesos.
     def generate_process(self,cant):
@@ -33,6 +36,8 @@ class CPUSimulation:
             process.state = "Preparado"
             process.arrival_time = tiempo_llegada
             self.ready_queue.append(process)
+            return True
+        return False
 
     # Este es el metodo que interrumpe el proceso
     def inturruption_process(self):
@@ -58,29 +63,31 @@ class CPUSimulation:
             messagebox.showerror("Error", "Algoritmo desconocido")
     def round_robin(self):
         while self.new_queue or self.ready_queue:
-            if self.new_queue:
-                process = self.new_queue.pop(0)
-                process.state = "Preparado"
-                self.ready_queue.append(process)
+            if len(self.ready_queue) < 10:
+                tiempo_llegada = round(perf_counter() - self.user_time)
+                while self.prepare_process(tiempo_llegada):
+                    pass
 
             if self.ready_queue:
                 process = self.ready_queue.pop(0)
                 process.state = "Ejecutando"
-
-                if process.remaining_time <= self.quantum:
-                    time.sleep(process.remaining_time / 1000)
+                #Verificar si el tiempo de restante de la rafaga es mayor o menor al quantum menos el 10% de ese quantum
+                if process.remaining_time <= self.quantum -  self.context_switch_time: 
+                    time.sleep(process.remaining_time)
                     self.context_switch()
+                    self.waiting_time += len(self.ready_queue) * process.remaining_time
                     process.remaining_time = 0
                     process.state = "Terminado"
                     self.finished_processes.append(process)
                 else:
-                    time.sleep(self.quantum / 1000)
+                    time.sleep(self.quantum - self.context_switch_time)
                     self.context_switch()
                     process.remaining_time -= self.quantum
                     self.ready_queue.append(process)
 
     def priority_round_robin(self):
-        while self.new_queue or self.ready_queue:
+        
+        while  self.ready_queue:
             if self.new_queue:
                 process = self.new_queue.pop(0)
                 process.state = "Preparado"
@@ -105,8 +112,7 @@ class CPUSimulation:
 
     def context_switch(self):
         if len(self.ready_queue) > 1:
-            switch_time = self.context_switch_time / 1000
-            time.sleep(switch_time)
+            time.sleep(self.context_switch_time)
             self.log.append(
                 f"{datetime.now()}: Cambio de contexto - Proceso saliente: {self.ready_queue[0].id}, Proceso entrante: {self.ready_queue[1].id}")
 
