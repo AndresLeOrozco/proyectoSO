@@ -115,7 +115,12 @@ class CPUSimulation:
         if len(self.ready_queue) > 1:
             time.sleep(self.context_switch_time)
             self.log.append(
-                f"{datetime.now()}: Cambio de contexto - Proceso saliente: {self.ready_queue[0].id}, Proceso entrante: {self.ready_queue[1].id}")
+                f"{datetime.now()}: Cambio de contexto - Proceso saliente: {self.ready_queue[0].id}                                                                                          "
+                f"Proceso entrante: {self.ready_queue[1].id}                                                                                                                                            "
+            )
+            
+            
+        
 
 
     def calculate_waiting_time(self,waiting_time):
@@ -125,4 +130,10 @@ class CPUSimulation:
     def average_waiting_time(self):
         total_waiting_time = sum(process.waiting_time for process in self.finished_processes)
         return total_waiting_time / len(self.finished_processes)
+    
+    def geStaticts(self):
+        print("Tiempos de espera\n")
+        for process in self.end_process:
+            print("Tiempo de rafaga: " + str(process.burst_time))
+            print(process.waiting_time * '*', end="\n\n")
     
