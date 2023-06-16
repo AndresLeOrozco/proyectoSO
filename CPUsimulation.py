@@ -88,27 +88,30 @@ class CPUSimulation:
                     self.ready_queue.append(process)
 
     def priority_round_robin(self):
-        while  self.ready_queue:
-            if self.new_queue:
-                process = self.new_queue.pop(0)
-                process.state = "Preparado"
-                self.ready_queue.append(process)
+        while  self.new_queue or self.ready_queue:
+            if len(self.ready_queue) < 10:
+                tiempo_llegada = round(perf_counter() - self.user_time)
+                while self.prepare_process(tiempo_llegada):
+                    pass
 
             if self.ready_queue:
                 self.ready_queue.sort(key=lambda x: x.priority)  # Ordenar por prioridad
                 process = self.ready_queue.pop(0)
                 process.state = "Ejecutando"
 
-                if process.remaining_time <= self.quantum:
-                    time.sleep(process.remaining_time / 1000)
+                if process.remaining_time <= self.quantum - self.context_switch_time: 
+                    time.sleep(process.remaining_time)
                     self.context_switch()
+                    self.calculate_waiting_time(process.remaining_time)
                     process.remaining_time = 0
                     process.state = "Terminado"
-                    self.finished_processes.append(process)
+                    self.end_process.append(process)
                 else:
-                    time.sleep(self.quantum / 1000)
+                    time.sleep(self.quantum - self.context_switch_time)
+                    self.calculate_waiting_time(self.quantum)
                     self.context_switch()
-                    process.remaining_time -= self.quantum
+                    process.remaining_time -= (self.quantum - self.context_switch_time)
+                    process.state = "Preparado"
                     self.ready_queue.append(process)
 
     def context_switch(self):
@@ -118,10 +121,6 @@ class CPUSimulation:
                 f"{datetime.now()}: Cambio de contexto - Proceso saliente: {self.ready_queue[0].id}                                                                                          "
                 f"Proceso entrante: {self.ready_queue[1].id}                                                                                                                                            "
             )
-            
-            
-        
-
 
     def calculate_waiting_time(self,waiting_time):
         for process in self.ready_queue:
