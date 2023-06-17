@@ -12,11 +12,12 @@ class GUI:
         # Crear widgets
         self.label_algorithm = tk.Label(root, text="Seleccione el algoritmo:")
         self.combo_algorithm = tk.OptionMenu(root, self.selected_algorithm, *["Round Robin", "Prioridades con Round Robin"])
-        self.btn_start_simulation = tk.Button(root, text="Iniciar simulación", command=lambda:self.start_simulation())
+        
         self.label_quantity = tk.Label(root, text="Ingrese la cantidad de procesos en la simulacion:")
         self.process_quantity =  tk.Entry(root)
         self.label_quantum = tk.Label(root, text="Ingrese el tiempo del quantum:")
         self.process_quantum = tk.Entry(root)
+        self.btn_start_simulation = tk.Button(root, text="Iniciar simulación", command=lambda:self.start_simulation())
 
         # Posicionar widgets
         self.label_algorithm.pack()
@@ -29,12 +30,14 @@ class GUI:
         self.process_quantum.pack()
 
     def start_simulation(self):
-        if self.process_quantum.get() or self.process_quantity.get() == "":
-            
+        quantum =  self.process_quantum.get()
+        quantity = self.process_quantity.get()
+        if quantum == "" or quantity  == "":
+            messagebox.showerror("Error", "Debe rellenar todos los campos")
             return
         else:  
-            simulacion = CPUSimulation(self.process_quantum.get())
-            simulacion.generate_process(self.process_quantity.get())
+            simulacion = CPUSimulation(int(self.process_quantum.get()))
+            simulacion.generate_process(int(self.process_quantity.get()))
             algorithm = self.selected_algorithm.get()
             if not algorithm:
                 messagebox.showerror("Error", "Debe seleccionar un algoritmo")
@@ -43,6 +46,8 @@ class GUI:
                 simulacion.round_robin()
             if algorithm == "Prioridades con Round Robin":
                 simulacion.priority_round_robin()
-            self.simulation.calculate_waiting_time()
+            for i in simulacion.log:
+                print(i)
+                simulacion.geStaticts()
             messagebox.showinfo("Información", "Simulación finalizada")
 
