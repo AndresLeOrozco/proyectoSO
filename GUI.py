@@ -49,5 +49,6 @@ class GUI:
             for i in simulacion.log:
                 print(i)
                 simulacion.geStaticts()
+            simulacion.writeStatistics()
             messagebox.showinfo("Información", "Simulación finalizada")
 

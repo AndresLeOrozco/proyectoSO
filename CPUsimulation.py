@@ -5,6 +5,8 @@ from datetime import datetime
 from Process import *
 from tkinter import messagebox, filedialog
 import random
+import matplotlib.pyplot as plt
+
 # Clase de la simulación
 class CPUSimulation:
     def __init__(self,quant):
@@ -17,7 +19,7 @@ class CPUSimulation:
         self.context_switch_time = int(self.quantum * 0.1)  # Tiempo de cambio de contexto en ms
         self.io_interrupt_time = 5000  # Tiempo de interrupción de E/S en ms
         self.user_time = perf_counter() #Este es el tiempo que dura el usuario en elegir ingresar aqui
-        
+        self.procesos_a_mostrar = dict() # Diccionario de procesos y duracion
         
 
     # Este metodo es para crear cada uno de los procesos.
@@ -86,6 +88,8 @@ class CPUSimulation:
                     process.remaining_time -= (self.quantum - self.context_switch_time)
                     process.state = "Preparado"
                     self.ready_queue.append(process)
+                
+                self.mostrar_procesos(process)
 
     def priority_round_robin(self):
         while  self.new_queue or self.ready_queue:
@@ -114,6 +118,8 @@ class CPUSimulation:
                     process.state = "Preparado"
                     self.ready_queue.append(process)
 
+                self.mostrar_procesos(process)
+
     def context_switch(self):
         if len(self.ready_queue) > 1:
             time.sleep(self.context_switch_time)
@@ -131,8 +137,59 @@ class CPUSimulation:
         return total_waiting_time / len(self.finished_processes)
     
     def geStaticts(self):
+        tiempo_total = 0
+        num_de_rafagas = 0
+
         print("Tiempos de espera\n")
         for process in self.end_process:
             print("Tiempo de rafaga: " + str(process.burst_time))
             print(process.waiting_time * '*', end="\n\n")
+            tiempo_total += process.burst_time
+            num_de_rafagas += 1
+        print("Tiempo promedio: " + str(self.calcular_tiempo_promedio(tiempo_total, num_de_rafagas)))
+
+    def writeStatistics(self):
+        tiempo_total = 0
+        num_de_rafagas = 0
+
+        dia = datetime.now()
+        archivo = "Bitacora_" + str(dia.strftime("%H_%M_%S")) + ".txt"
+
+        f = open(archivo, "a")
+        txt = ""
+        for process in self.end_process:
+            txt += "Tiempo de rafaga: " + str(process.burst_time) + "\n"
+            txt += str(process.waiting_time * '*' + "\n\n")
+            tiempo_total += process.burst_time
+            num_de_rafagas += 1
+        txt += "Tiempo promedio: " + str(self.calcular_tiempo_promedio(tiempo_total, num_de_rafagas))
+
+        f.write(txt)
+        f.close
+
+    def mostrar_procesos(self, process):
+        plt.figure(figsize = (10, 5))
+        plt.xlabel("ID del Proceso")
+        plt.ylabel("Tiempo [ms]")
+
+        if str(process.id) in self.procesos_a_mostrar:
+            plt.title("Tiempo de cada proceso.")
+            txt="Ultimo Cambio: Proceso " + str(process.id) + " pasa de " + str(self.procesos_a_mostrar.get(str(process.id))) + "ms a " + str(self.procesos_a_mostrar.get(str(process.id))+process.burst_time)  + "ms \n\n" + process.__str__()
+            self.procesos_a_mostrar[str(process.id)] += process.burst_time
+        else:
+            self.procesos_a_mostrar[str(process.id)] = process.burst_time
+            plt.title("Tiempo de cada proceso.")
+            txt="Ultimo Cambio: Proceso " + str(process.id) + " a " + str(process.burst_time) + "ms \n\n" + process.__str__()
+        
+        plt.figtext(0.5, 0.4, txt, wrap=True, horizontalalignment='center', fontsize=12)
+        ids = list(self.procesos_a_mostrar.keys())
+        valores = list(self.procesos_a_mostrar.values())
+
+        plt.bar(ids, valores, color ='lightblue',width = 0.1)
+        plt.show(block=False)
+        plt.pause(4)
+        plt.close()
+
+    def calcular_tiempo_promedio(self, tiempo_total, num_de_rafagas) -> float:
+        return tiempo_total / num_de_rafagas
     
